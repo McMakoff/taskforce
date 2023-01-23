@@ -2,6 +2,8 @@
 
 namespace taskforce\logic;
 
+use taskforce\exception\StatusActionException;
+use taskforce\logic\action\AbstractAction;
 use taskforce\logic\action\CancelAction;
 use taskforce\logic\action\CompleteAction;
 use taskforce\logic\action\DenyAction;
@@ -29,7 +31,7 @@ class AvailableActions
     $this->clientID = $clientID;
   }
 
-  public function getNextStatus ($action)
+  public function getNextStatus (AbstractAction $action): ?string
   {
     $map = [
       ResponseAction::class  => self::STATUS_WORKING,
@@ -38,7 +40,7 @@ class AvailableActions
       DenyAction::class => self::STATUS_NEW,
     ];
 
-    return $map[$action] ?? null;
+    return $map[get_class($action)] ?? null;
   }
 
   public function getAllowedActions (string $role, int $currentUserId): array
@@ -99,6 +101,10 @@ class AvailableActions
       self::STATUS_PERFORMED,
       self::STATUS_FAILED,
     ];
+
+    if (!in_array($status, $allowedStatus)) {
+      throw new StatusActionException('Ошибочка вышла');
+    }
 
     if (in_array($status, $allowedStatus)) {
       $this->status = $status;
